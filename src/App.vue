@@ -3,6 +3,7 @@
 </template>
 
 <script setup>
+import gsap from "gsap";
 import * as THREE from "three";
 import { onMounted, ref } from "vue";
 
@@ -59,7 +60,32 @@ onMounted(() => {
     }
   });
 
+  // 创建客厅
   let liveroom = new Room("客厅", 0, "./img/livingroom/");
+
+  // 创建厨房
+  let kitchenPosition = new THREE.Vector3(-5, 0, -10);
+  let kitEuler = new THREE.Euler(0, -Math.PI / 2, 0);
+  let kitchen = new Room(
+    "厨房",
+    3,
+    "./img/kitchen/",
+    kitchenPosition,
+    kitEuler
+  );
+
+  // 创建厨房的文字
+  let kitchenTextPosition = new THREE.Vector3(-1, 0, -3);
+  let kitchenText = new SpriteText("厨房", kitchenTextPosition);
+
+  kitchenText.onClick(() => {
+    gsap.to(camera.position, {
+      x: kitchenPosition.x,
+      y: kitchenPosition.y,
+      z: kitchenPosition.z,
+      duration: 1,
+    });
+  });
 });
 class Room {
   constructor(
@@ -85,16 +111,69 @@ class Room {
 
     let boxMaterials = [];
     arr.forEach((item) => {
-      boxMaterials.push(
-        new THREE.MeshBasicMaterial({
-          map: new THREE.TextureLoader().load(textureUrl + item + ".jpg"),
-        })
-      );
+      let texture = new THREE.TextureLoader().load(textureUrl + item + ".jpg");
+      // 处理图片角度问题
+      if (item === `${roomIndex}_d` || item === `${roomIndex}_u`) {
+        texture.rotation = Math.PI;
+        texture.center = new THREE.Vector2(0.5, 0.5);
+      }
+
+      boxMaterials.push(new THREE.MeshBasicMaterial({ map: texture }));
     });
 
     const cube = new THREE.Mesh(geometry, boxMaterials);
     cube.position.copy(position);
+    cube.rotation.copy(eular);
     scene.add(cube);
+  }
+}
+
+class SpriteText {
+  constructor(text, position) {
+    this.callbacks = [];
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 1024;
+
+    const context = canvas.getContext("2d");
+    context.fillStyle = "rgba(100, 100, 100, 0.7)";
+    context.fillRect(0, 265, 1024, 512);
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.font = "bold 200px arial";
+    context.fillStyle = "white";
+    context.fillText(text, 512, 512);
+    let texture = new THREE.CanvasTexture(canvas);
+
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+    });
+
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(0.5, 0.5, 0.5);
+    this.sprite = sprite;
+    sprite.position.copy(position);
+    scene.add(sprite);
+
+    let mouse = new THREE.Vector2();
+    let raycaster = new THREE.Raycaster();
+
+    window.addEventListener("click", (event) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      let intersection = raycaster.intersectObject(sprite);
+      if (intersection.length > 0) {
+        this.callbacks.forEach((callback) => {
+          callback();
+        });
+      }
+    });
+  }
+  onClick(callback) {
+    this.callbacks.push(callback);
   }
 }
 </script>
