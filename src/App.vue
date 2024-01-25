@@ -86,6 +86,46 @@ onMounted(() => {
       duration: 1,
     });
   });
+
+  // 创建厨房回客厅精灵文字
+  let kitchenBackTextPosition = new THREE.Vector3(-4, 0, -6);
+  let kitchenBackText = new SpriteText("客厅", kitchenBackTextPosition);
+  kitchenBackText.onClick(() => {
+    gsap.to(camera.position, {
+      x: 0,
+      y: 0,
+      z: 0,
+      duration: 1,
+    });
+  });
+
+  // 创建阳台
+  let balconyPosition = new THREE.Vector3(0, 0, 15);
+  let balcony = new Room("阳台", 8, "./img/balcony/", balconyPosition);
+
+  // 创建阳台的文字
+  let balconyTextPosition = new THREE.Vector3(0, 0, 3);
+  let balconyText = new SpriteText("阳台", balconyTextPosition);
+  balconyText.onClick(() => {
+    gsap.to(camera.position, {
+      x: balconyPosition.x,
+      y: balconyPosition.y,
+      z: balconyPosition.z,
+      duration: 1,
+    });
+  });
+
+  // 创建阳台回客厅的精灵文字
+  let balconyBackTextPosition = new THREE.Vector3(-1, 0,11);
+  let balconyBackText = new SpriteText("客厅", balconyBackTextPosition);
+  balconyBackText.onClick(() => {
+    gsap.to(camera.position, {
+      x: 0,
+      y: 0,
+      z: 0,
+      duration: 1,
+    });
+  });
 });
 class Room {
   constructor(
